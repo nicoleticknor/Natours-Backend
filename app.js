@@ -25,6 +25,35 @@ app.get("/api/v1/tours", (req, res) => {
   });
 });
 
+app.get("/api/v1/tours/:id", (req, res) => {
+  //note that /:x/:y?/:z will give back x y and z as params too, where y is optional (? modifier)
+
+  // console.log(req.params);
+
+  const id = Number(req.params.id);
+  // one potential quick and easy guard clause
+  // if (id > tours.length) {
+  //   return res.status(404).json({
+  //     status: "failed",
+  //     message: "invalid id",
+  //   });
+  // }
+
+  const tour = tours.find((e) => e.id === id);
+  //another temp guard clause
+  if (!tour) {
+    return res.status(404).json({
+      status: "failed",
+      message: "invalid id",
+    });
+  }
+
+  res.status(200).json({
+    status: "success",
+    data: { tour },
+  });
+});
+
 app.post("/api/v1/tours", (req, res) => {
   // console.log(req.body);
 
