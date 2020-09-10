@@ -6,41 +6,28 @@ const app = express();
 //middleware so that we can add data from the request body to the request object
 app.use(express.json());
 
-// app.get("/", (req, res) => {
-//   res.status(200).send("Hello from the server side");
-// });
-
 //since the data is local, reading this into a variable first so that it's not blocking when the route handler api/v1/tours is called
 const tours = JSON.parse(
   fs.readFileSync(`${__dirname}/dev-data/data/tours-simple.json`),
 );
 
-// specifying v1 so that the API can be changed and not break for users who still use v1
-app.get("/api/v1/tours", (req, res) => {
+const getAllTours = (req, res) => {
   res.status(200).json({
     status: "success",
     //do this when sending an array / multiple objects
     results: tours.length,
     data: { tours }, //tours: tours (ES6)
   });
-});
+};
 
-app.get("/api/v1/tours/:id", (req, res) => {
+const getTour = (req, res) => {
   //note that /:x/:y?/:z will give back x y and z as params too, where y is optional (? modifier)
 
-  // console.log(req.params);
-
   const id = Number(req.params.id);
-  // one potential quick and easy guard clause
-  // if (id > tours.length) {
-  //   return res.status(404).json({
-  //     status: "failed",
-  //     message: "invalid id",
-  //   });
-  // }
 
   const tour = tours.find((e) => e.id === id);
-  //another temp guard clause
+
+  // temp guard clause
   if (!tour) {
     return res.status(404).json({
       status: "failed",
@@ -52,11 +39,9 @@ app.get("/api/v1/tours/:id", (req, res) => {
     status: "success",
     data: { tour },
   });
-});
+};
 
-app.post("/api/v1/tours", (req, res) => {
-  // console.log(req.body);
-
+const createTour = (req, res) => {
   const newId = tours[tours.length - 1].id + 1;
   // doing it this way so we don't mutate the original body object
   const newTour = Object.assign({ id: newId }, req.body);
@@ -74,11 +59,9 @@ app.post("/api/v1/tours", (req, res) => {
       });
     },
   );
-  // you'll get an error "Cannot send headers after they are sent to the client" if you try to send two responses
-  // res.send("success");
-});
+};
 
-app.patch("/api/v1/tours/:id", (req, res) => {
+const updateTour = (req, res) => {
   //not actually going to implement this right now b/c that's a lot of fs methods; will do this later with the actual DB
 
   const id = req.params.id;
@@ -95,9 +78,9 @@ app.patch("/api/v1/tours/:id", (req, res) => {
       tour: "<updated tour here...>",
     },
   });
-});
+};
 
-app.delete("/api/v1/tours/:id", (req, res) => {
+const deleteTour = (req, res) => {
   //won't actually do this right now; we will wait til the DB is up
   const id = req.params.id;
 
@@ -111,7 +94,26 @@ app.delete("/api/v1/tours/:id", (req, res) => {
     status: "success",
     data: null,
   });
-});
+};
+
+// app.get("/api/v1/tours", getAllTours);
+// app.get("/api/v1/tours/:id", getTour);
+// app.post("/api/v1/tours", createTour);
+// app.patch("/api/v1/tours/:id", updateTour);
+// app.delete("/api/v1/tours/:id", deleteTour);
+
+// specifying v1 so that the API can be changed and not break for users who still use v1
+//doing it this way we can chain all the methods for each route, so that it's neater than the above
+app
+  .route("/api/v1/tours")
+  .get(getAllTours)
+  .post(createTour);
+
+app
+  .route("/api/v1/tours/:id")
+  .get(getTour)
+  .patch(updateTour)
+  .delete(deleteTour);
 
 const port = 3000;
 
