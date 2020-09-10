@@ -78,6 +78,41 @@ app.post("/api/v1/tours", (req, res) => {
   // res.send("success");
 });
 
+app.patch("/api/v1/tours/:id", (req, res) => {
+  //not actually going to implement this right now b/c that's a lot of fs methods; will do this later with the actual DB
+
+  const id = req.params.id;
+
+  if (id > tours.length) {
+    return res.status(404).json({
+      status: "failed",
+      message: "invalid id",
+    });
+  }
+  res.status(200).json({
+    status: "success",
+    data: {
+      tour: "<updated tour here...>",
+    },
+  });
+});
+
+app.delete("/api/v1/tours/:id", (req, res) => {
+  //won't actually do this right now; we will wait til the DB is up
+  const id = req.params.id;
+
+  if (id > tours.length) {
+    return res.status(404).json({
+      status: "failed",
+      message: "invalid id",
+    });
+  }
+  res.status(204).json({
+    status: "success",
+    data: null,
+  });
+});
+
 const port = 3000;
 
 app.listen(port, () => {
