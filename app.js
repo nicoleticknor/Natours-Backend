@@ -1,12 +1,35 @@
 const fs = require("fs");
 const express = require("express");
+const morgan = require("morgan");
 
 const app = express();
 
-//middleware so that we can add data from the request body to the request object
+// * Middlewares
+
+//app.use adds middleware to the "middleware stack" which happens in a chain for every request (unless a specific route is specified)
+// NB you can use morgan's logger to save the outputs to a location
+app.use(morgan("dev"));
+
+//this is express' built-in body parser
 app.use(express.json());
 
-//since the data is local, reading this into a variable first so that it's not blocking when the route handler api/v1/tours is called
+//defining our own middleware that will apply to every request (because we don't specify a route)
+//note that code order matters in the middleware stack - this will get executed in order, so if the route comes before this, this will never happen (because the route will send a response which terminates the request/response cycle)
+app.use((req, res, next) => {
+  console.log("hello from the middleware 🙌");
+  //have to call the next function at the end of our own middlware functions, otherwise the server will just hang. need to move to the next middleware function
+  next();
+});
+
+app.use((req, res, next) => {
+  //creating a k/v in the req object that we can call later in another middleware function (in this case, the route itself)
+  req.requestTime = new Date().toISOString();
+  next();
+});
+
+// * Route handlers
+
+//since the data is local, reading this into a variable first so that it's not blocking when the route api/v1/tours is called
 const tours = JSON.parse(
   fs.readFileSync(`${__dirname}/dev-data/data/tours-simple.json`),
 );
@@ -14,6 +37,7 @@ const tours = JSON.parse(
 const getAllTours = (req, res) => {
   res.status(200).json({
     status: "success",
+    requestedAt: req.requestTime,
     //do this when sending an array / multiple objects
     results: tours.length,
     data: { tours }, //tours: tours (ES6)
@@ -96,6 +120,8 @@ const deleteTour = (req, res) => {
   });
 };
 
+// * Routes
+
 // app.get("/api/v1/tours", getAllTours);
 // app.get("/api/v1/tours/:id", getTour);
 // app.post("/api/v1/tours", createTour);
@@ -114,6 +140,8 @@ app
   .get(getTour)
   .patch(updateTour)
   .delete(deleteTour);
+
+// * Server
 
 const port = 3000;
 
