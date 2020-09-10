@@ -4,6 +4,19 @@ const tours = JSON.parse(
   fs.readFileSync(`dev-data/data/tours-simple.json`),
 );
 
+// creating param middleware to validate tour ID
+exports.checkID = (req, res, next, val) => {
+  const id = req.params.id;
+  if (id > tours.length) {
+    //need to specify return
+    return res.status(404).json({
+      status: "failed",
+      message: "invalid id",
+    });
+  }
+  next();
+};
+
 exports.getAllTours = (req, res) => {
   res.status(200).json({
     status: "success",
@@ -16,18 +29,8 @@ exports.getAllTours = (req, res) => {
 
 exports.getTour = (req, res) => {
   //note that /:x/:y?/:z will give back x y and z as params too, where y is optional (? modifier)
-
   const id = Number(req.params.id);
-
   const tour = tours.find((e) => e.id === id);
-
-  // temp guard clause
-  if (!tour) {
-    return res.status(404).json({
-      status: "failed",
-      message: "invalid id",
-    });
-  }
 
   res.status(200).json({
     status: "success",
@@ -58,14 +61,6 @@ exports.createTour = (req, res) => {
 exports.updateTour = (req, res) => {
   //not actually going to implement this right now b/c that's a lot of fs methods; will do this later with the actual DB
 
-  const id = req.params.id;
-
-  if (id > tours.length) {
-    return res.status(404).json({
-      status: "failed",
-      message: "invalid id",
-    });
-  }
   res.status(200).json({
     status: "success",
     data: {
@@ -76,14 +71,6 @@ exports.updateTour = (req, res) => {
 
 exports.deleteTour = (req, res) => {
   //won't actually do this right now; we will wait til the DB is up
-  const id = req.params.id;
-
-  if (id > tours.length) {
-    return res.status(404).json({
-      status: "failed",
-      message: "invalid id",
-    });
-  }
   res.status(204).json({
     status: "success",
     data: null,
