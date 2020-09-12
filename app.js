@@ -15,6 +15,9 @@ app.use(morgan("dev"));
 //this is express' built-in body parser
 app.use(express.json());
 
+//to allow our markup and style sheets
+app.use(express.static(`${__dirname}/public`));
+
 //defining our own middleware that will apply to every request (because we don't specify a route, as we do with mounting below)
 //note that code order matters in the middleware stack - this will get executed in order, so if the route comes before this, this will never happen (because the route will send a response which terminates the request/response cycle)
 app.use((req, res, next) => {
