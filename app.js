@@ -1,3 +1,5 @@
+// ?? Express App file
+
 const express = require("express");
 const morgan = require("morgan");
 
@@ -7,10 +9,13 @@ const userRouter = require("./routes/userRoutes");
 const app = express();
 
 // * Middlewares
-
 //app.use adds middleware to the "middleware stack" which happens in a chain for every request (unless a specific route is specified)
-// NB you can use morgan's logger to save the outputs to a location
-app.use(morgan("dev"));
+
+//to only use morgan when we are in development environment
+if (process.env.NODE_ENV === "development") {
+  // NB you can use morgan's logger to save the outputs to a location
+  app.use(morgan("dev"));
+}
 
 //this is express' built-in body parser
 app.use(express.json());
