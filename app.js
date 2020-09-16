@@ -15,7 +15,6 @@ const app = express();
 if (process.env.NODE_ENV === 'development') {
   // NB you can use morgan's logger to save the outputs to a location
   app.use(morgan('dev'));
-
 }
 
 //this is express' built-in body parser
