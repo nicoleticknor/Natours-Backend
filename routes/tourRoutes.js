@@ -10,15 +10,17 @@ router.param("id", (req, res, next, val) => {
   next();
 });
 
-//removing this now that we've moved from fs to mongo
 //invoking the ID check param middleware. Using the middleware pipeline for this keeps our code DRY
+//removing this now that we've moved from fs to mongo
 // router.param("id", (tourController.checkID));
 
 router
   .route("/")
   .get(tourController.getAllTours)
   // this is how we invoke the checkBody middleware, since it's not based on the parameters but rather is in the post function
-  .post(tourController.checkBody, tourController.createTour);
+  //removing this now that we've moved from fs to mongo
+  // .post(tourController.checkBody, tourController.createTour);
+  .post(tourController.createTour);
 
 router
   .route("/:id")
