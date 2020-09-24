@@ -10,8 +10,9 @@ router.param("id", (req, res, next, val) => {
   next();
 });
 
+//removing this now that we've moved from fs to mongo
 //invoking the ID check param middleware. Using the middleware pipeline for this keeps our code DRY
-router.param("id", (tourController.checkID));
+// router.param("id", (tourController.checkID));
 
 router
   .route("/")
