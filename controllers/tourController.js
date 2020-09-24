@@ -1,24 +1,40 @@
-const Tour = require('../model/tourModel');
+const Tour = require('../models/tourModel');
 
-exports.getAllTours = (req, res) => {
-  res.status(200).json({
-    status: 'success',
-    requestedAt: req.requestTime,
-    //do this when sending an array / multiple objects
-    // results: tours.length,
-    // data: { tours }, //tours: tours (ES6)
-  });
+exports.getAllTours = async (req, res) => {
+  try {
+    //same as when we query the MongoDB with the terminal, we use the find method
+    const tours = await Tour.find();
+
+    res.status(200).json({
+      status: 'success',
+      //do this when sending an array / multiple objects
+      results: tours.length,
+      data: { tours }, //tours: tours (ES6)
+    });
+  } catch (err) {
+    res.status(404).json({
+      status: 'failed',
+      message: err,
+    })
+  }
+
 };
 
-exports.getTour = (req, res) => {
-  //note that /:x/:y?/:z will give back x y and z as params too, where y is optional (? modifier)
-  const id = Number(req.params.id);
-  // const tour = tours.find((e) => e.id === id);
+exports.getTour = async (req, res) => {
+  try {
+    //this is a helper function Tour.findOne({_id: req.params.id})
+    const tour = await Tour.findById(req.params.id);
 
-  // res.status(200).json({
-  //   status: 'success',
-  //   data: { tour },
-  // });
+    res.status(200).json({
+      status: 'success',
+      data: { tour },
+    });
+  } catch (err) {
+    res.status(404).json({
+      status: 'failed',
+      message: err,
+    });
+  }
 };
 
 exports.createTour = async (req, res) => {
