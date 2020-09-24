@@ -55,21 +55,38 @@ exports.createTour = async (req, res) => {
   }
 };
 
-exports.updateTour = (req, res) => {
-  //not actually going to implement this right now b/c that's a lot of fs methods; will do this later with the actual DB
-
-  res.status(200).json({
-    status: 'success',
-    data: {
-      tour: '<updated tour here...>',
-    },
-  });
+exports.updateTour = async (req, res) => {
+  try {
+    //another helper method from mongoose. see mongoose docs for explanation
+    const tour = await Tour.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true,
+    });
+    res.status(200).json({
+      status: 'success',
+      data: {
+        tour,
+      },
+    });
+  } catch (err) {
+    res.status(404).json({
+      status: 'failed',
+      message: err,
+    });
+  }
 };
 
-exports.deleteTour = (req, res) => {
-  //won't actually do this right now; we will wait til the DB is up
-  res.status(204).json({
-    status: 'success',
-    data: null,
-  });
+exports.deleteTour = async (req, res) => {
+  try {
+    await Tour.findByIdAndDelete(req.params.id);
+    res.status(204).json({
+      status: 'success',
+      data: null,
+    });
+  } catch (err) {
+    res.status(404).json({
+      status: 'failed',
+      message: err,
+    });
+  }
 };
