@@ -1,9 +1,11 @@
 const mongoose = require('mongoose');
 //need to require and config this first before we try to run the app so that we get the correct variables
+//since morgan is dependent on the dev environment variable, morgan won't work if app is declared first
 const dotenv = require('dotenv');
-const app = require('./app');
 
 dotenv.config({ path: './config.env' });
+
+const app = require('./app');
 
 const DB = process.env.DATABASE.replace(
   '<PASSWORD>',
