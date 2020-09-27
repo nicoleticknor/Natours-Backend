@@ -23,9 +23,19 @@ exports.getAllTours = async (req, res) => {
     // .where('difficulty')
     // .equals('easy')
 
-    //the object passed into the find method can be the req.query object, or the queryObj copy without the excluded fields
-    //we are going to add sorting, paging, etc later, so we need to add a middle step where we save the resulting query object to a variable so we can chain those methods onto it later, as it's done in the code block above
-    const query = Tour.find(queryObj);
+    // ADVANCED FILTERING
+    let queryStr = JSON.stringify(queryObj);
+
+    // if we were to look for duration of at least 5 days, this is what the mongoDB query would look like. Can also see this in the console log if the route includes that in the query string
+    // { difficulty: 'easy', duration: { $gte: 5 } }
+
+    //so we can use regex to grab the query params and add the $ in front of the operator
+    queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, match => `$${match}`);
+
+    // console.log(JSON.parse(queryStr));
+
+    //the object passed into the find method can be the req.query object, or the queryObj copy without the excluded fields, or the queryStr variable we interpolated the $ into
+    const query = Tour.find(JSON.parse(queryStr));
 
     // EXECUTE QUERY
     const tours = await query;
