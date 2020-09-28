@@ -3,25 +3,10 @@ const Tour = require('../models/tourModel');
 exports.getAllTours = async (req, res) => {
   try {
     // BUILD QUERY
+    //Filtering
     const queryObj = { ...req.query };
-    // we are going to implement paging, sorting, limiting, etc as part of our browse functionality later, so we don't want those to be valid filter query params
     const excludedFields = ['page', 'sort', 'limit', 'fields'];
-
     excludedFields.forEach(f => delete queryObj[f]);
-    // console.log(req.query, queryObj);
-
-    //you can filter queries with an object in the find method
-    // const tours = await Tour.find({
-    //   duration: 5,
-    //   difficulty: 'easy',
-    // })
-
-    //NB you can also filter queries with method chains like this one
-    // const tours = Tour.find()
-    // .where('duration')
-    // .equals(5)
-    // .where('difficulty')
-    // .equals('easy')
 
     // ADVANCED FILTERING
     let queryStr = JSON.stringify(queryObj);
@@ -32,10 +17,23 @@ exports.getAllTours = async (req, res) => {
     //so we can use regex to grab the query params and add the $ in front of the operator
     queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, match => `$${match}`);
 
-    // console.log(JSON.parse(queryStr));
-
     //the object passed into the find method can be the req.query object, or the queryObj copy without the excluded fields, or the queryStr variable we interpolated the $ into
-    const query = Tour.find(JSON.parse(queryStr));
+    let query = Tour.find(JSON.parse(queryStr));
+
+    // Sorting
+
+    if (req.query.sort) {
+      // this split/join is to translate the query string , into a mongoose-friendly space
+      const sortBy = req.query.sort.split(',').join(' ');
+      //the sort method of the query object is a mongoose "query builder" thing
+      query = query.sort(sortBy)
+    } else {
+      //creating a default sort parameter if the user does not specify
+      query = query.sort('-createdAt');
+    }
+
+    //keeping this in for now because we can use it to see sort, paging, limit etc coming in from the query string in postman
+    console.log(JSON.parse(queryStr));
 
     // EXECUTE QUERY
     const tours = await query;
