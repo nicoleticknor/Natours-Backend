@@ -20,6 +20,9 @@ router
   .route('/top-5-best')
   .get(tourController.aliasTopTours, tourController.getAllTours);
 
+//the route for the aggregate pipeline
+router.route('/tour-stats').get(tourController.getTourStats);
+
 router
   .route('/')
   .get(tourController.getAllTours)
