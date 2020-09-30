@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const slugify = require('slugify');
+const validator = require('validator');
 
 const tourSchema = new mongoose.Schema(
   {
@@ -10,6 +11,9 @@ const tourSchema = new mongoose.Schema(
       trim: true,
       maxlength: [40, 'A tour name must be 40 characters or less'],
       minlength: [10, 'A tour name must have at least 10 characters'],
+      //this is how to use the custom validator library
+      //demonstration only because this excludes spaces
+      // validate: [validator.isAlpha, 'Tour name must only contain characters'],
     },
     slug: {
       type: String,
@@ -47,7 +51,21 @@ const tourSchema = new mongoose.Schema(
       type: Number,
       required: [true, 'A tour must have a price'],
     },
-    priceDiscount: Number,
+    priceDiscount: {
+      type: Number,
+      //this is a custom validator
+      validate: {
+        //the callback has access to the value associated with priceDiscount for each instance.
+        //you don't need to specify validator if you don't also have a message. it can just be validate: function(val) etc
+        //you could also do this as an array, but that would look weird so we did it as an object
+        validator: function (val) {
+          //you can only use the this keyword in a validator when creating a new document. this will not be available when updating a document
+          return val < this.price; // if priceDiscount is 100 and price is 350, then this is true. If priceDiscount were 400, this would return false
+        },
+        //this {VALUE} thing is a mongoose thing; it has access to the value just like the callback but it's syntax is specific
+        message: 'Discount price ({VALUE}) must be lower than regular price',
+      },
+    },
     summary: {
       type: String,
       //this is the same as excel trim, but applies only to strings
@@ -94,7 +112,7 @@ tourSchema.virtual('durationWeeks').get(function () {
 
 // ?? DOCUMENT MIDDLEWARE
 
-//pre is a middleware that will run before an event. in this case the event is the save method, and therefore also the create() method. However it won't trigger from insertMany()
+//pre is a middleware that will run before an event. in this case the event is the save method, and therefore also the create() method. However it won't trigger from insertMany(), or for the update() method
 //we will have access to the data to be saved via the this keyword, so we can act on it that way
 tourSchema.pre('save', function (next) {
   this.slug = slugify(this.name, { lower: true });
