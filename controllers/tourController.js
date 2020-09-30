@@ -1,5 +1,18 @@
 const Tour = require('../models/tourModel');
 
+
+// ** Aliasing for a popular route - middleware
+//search for the five best tours, sorted by price. query string would be limit=5&sort=-ratingsAverage,price
+//when someone hits the route tours/top-5-best, the first function that triggers is this one which sets the query string to this
+exports.aliasTopTours = (req, res, next) => {
+  req.query.limit = '5';
+  //-ratingsAverage means "best", and the price sort means within those that have the same ratingsAverage, sort by price ascending
+  req.query.sort = '-ratingsAverage,price';
+  //these are the fields it will request the next function to limit to
+  req.query.fields = 'name,price,ratingsAverage,summary,difficulty';
+  next();
+};
+
 exports.getAllTours = async (req, res) => {
   try {
     // ?? BUILD QUERY
