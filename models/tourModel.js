@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const slugify = require('slugify');
 
 const tourSchema = new mongoose.Schema(
   {
@@ -6,6 +7,9 @@ const tourSchema = new mongoose.Schema(
       type: String,
       required: [true, 'A tour must have a name'],
       unique: true,
+    },
+    slug: {
+      type: String,
     },
     duration: {
       type: Number,
@@ -71,6 +75,25 @@ const tourSchema = new mongoose.Schema(
 tourSchema.virtual('durationWeeks').get(function () {
   return this.duration / 7;
 });
+
+//pre is a middleware that will run before an event. in this case the event is the save method, and therefore also the create() method. However it won't trigger from insertMany()
+//we will have access to the data to be saved via the this keyword, so we can act on it that way
+tourSchema.pre('save', function (next) {
+  this.slug = slugify(this.name, { lower: true });
+  next();
+});
+
+//for demonstration that we can have more than one pre method for a single method (save)
+// tourSchema.pre('save', function (next) {
+//   console.log('Will save document...');
+//   next();
+// });
+
+//the post middleware funcs have access to the document that was just saved. called doc here
+// tourSchema.post('save', function (doc, next) {
+//   console.log(doc);
+//   next();
+// });
 
 //this is the "model" that we create out of the Schema
 const Tour = mongoose.model('Tour', tourSchema);
