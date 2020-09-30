@@ -70,7 +70,7 @@ exports.createTour = async (req, res) => {
     res.status(400).json({
       status: 'failed',
       // temporary error handling until we do something more meaningful later
-      message: 'Invalid data sent',
+      message: err,
     });
   }
 };
@@ -80,6 +80,7 @@ exports.updateTour = async (req, res) => {
     //another helper method from mongoose. see mongoose docs for explanation
     const tour = await Tour.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
+      //this runs the validators in the class object over again. otherwise the update would go through even if there were invalid fields
       runValidators: true,
     });
     res.status(200).json({
