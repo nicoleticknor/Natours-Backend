@@ -6,34 +6,42 @@ exports.getAllTours = async (req, res) => {
     //Filtering
     const queryObj = { ...req.query };
     const excludedFields = ['page', 'sort', 'limit', 'fields'];
+    //since we are using the find method with queryObj, and queryObj may come in with sort, limit, etc, we need to strip those out. Because none of our documents in this collection has those fields, obviously
     excludedFields.forEach(f => delete queryObj[f]);
 
     // ADVANCED FILTERING
     let queryStr = JSON.stringify(queryObj);
 
-    // if we were to look for duration of at least 5 days, this is what the mongoDB query would look like. Can also see this in the console log if the route includes that in the query string
-    // { difficulty: 'easy', duration: { $gte: 5 } }
-
-    //so we can use regex to grab the query params and add the $ in front of the operator
+    //use regex to grab the query params and add the $ in front of the operator as in mongoDB query language
     queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, match => `$${match}`);
 
-    //the object passed into the find method can be the req.query object, or the queryObj copy without the excluded fields, or the queryStr variable we interpolated the $ into
+    //need to use JSON in the find method
     let query = Tour.find(JSON.parse(queryStr));
 
     // Sorting
-
+    //since we stripped sort out of the queryObj, we will just look at the query params again as they came in for a sort k:v pair
     if (req.query.sort) {
-      // this split/join is to translate the query string , into a mongoose-friendly space
+      // console.log(req.query.sort); // -price,-ratingsAverage (for example)
+      // this split/join is to translate the query string comma "," between the fields into a mongoose-friendly space " " (see mongoose docs on sort method for syntax)
       const sortBy = req.query.sort.split(',').join(' ');
       //the sort method of the query object is a mongoose "query builder" thing
-      query = query.sort(sortBy)
+      query = query.sort(sortBy);
     } else {
-      //creating a default sort parameter if the user does not specify
+      //creating a default sort parameter in case the user does not specify
       query = query.sort('-createdAt');
     }
 
-    //keeping this in for now because we can use it to see sort, paging, limit etc coming in from the query string in postman
-    console.log(JSON.parse(queryStr));
+    // Limiting search fields returned
+    if (req.query.fields) {
+      //again, the select method expects a space instead of a comma
+      const fields = req.query.fields.split(',').join(' ');
+      //so we only get the fields the user selects
+      query = query.select(fields);
+    } else {
+      //default - we want all fields, but only all useful fields. since mongoose automatically includes a __v field for each document, and we don't want to disable that strictly, we will exclude them in the else/default case
+      //the minus operator will exlude the field; this will select everything except the __v fields
+      query = query.select('-__v');
+    }
 
     // EXECUTE QUERY
     const tours = await query;
