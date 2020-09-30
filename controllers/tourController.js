@@ -1,5 +1,5 @@
 const Tour = require('../models/tourModel');
-
+const APIFeatures = require('./../utils/apiFeatures')
 
 // ** Aliasing for a popular route - middleware
 //search for the five best tours, sorted by price. query string would be limit=5&sort=-ratingsAverage,price
@@ -15,74 +15,15 @@ exports.aliasTopTours = (req, res, next) => {
 
 exports.getAllTours = async (req, res) => {
   try {
-    // ?? BUILD QUERY
-    // ** Filtering
-    const queryObj = { ...req.query };
-    const excludedFields = ['page', 'sort', 'limit', 'fields'];
-    //since we are using the find method with queryObj, and queryObj may come in with sort, limit, etc, we need to strip those out. Because none of our documents in this collection has those fields, obviously
-    excludedFields.forEach(f => delete queryObj[f]);
-
-    // ** ADVANCED FILTERING
-    let queryStr = JSON.stringify(queryObj);
-
-    //use regex to grab the query params and add the $ in front of the operator as in mongoDB query language
-    queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, match => `$${match}`);
-
-    //need to use JSON in the find method
-    let query = Tour.find(JSON.parse(queryStr));
-
-    // ** Sorting
-    //since we stripped sort out of the queryObj, we will just look at the query params again as they came in for a sort k:v pair
-    if (req.query.sort) {
-      // console.log(req.query.sort); // -price,-ratingsAverage (for example)
-      // this split/join is to translate the query string comma "," between the fields into a mongoose-friendly space " " (see mongoose docs on sort method for syntax)
-      const sortBy = req.query.sort.split(',').join(' ');
-      //the sort method of the query object is a mongoose "query builder" thing
-      query = query.sort(sortBy);
-    } else {
-      //creating a default sort parameter in case the user does not specify
-      query = query.sort('-createdAt');
-    }
-
-    // ** Limiting search fields returned
-    if (req.query.fields) {
-      //again, the select method expects a space instead of a comma
-      const fields = req.query.fields.split(',').join(' ');
-      //so we only get the fields the user selects
-      query = query.select(fields);
-    } else {
-      //default - we want all fields, but only all useful fields. since mongoose automatically includes a __v field for each document, and we don't want to disable that strictly, we will exclude them in the else/default case
-      //the minus operator will exlude the field; this will select everything except the __v fields
-      query = query.select('-__v');
-    }
-
-    // ** Pagination and limiting results per page
-    // the query string looks like ?page=2&limit=10 for example
-
-    //skip is the amount of results that should be skipped before querying data, and limit is the amount of results that we want to be returned
-    //so we need to calculate the skip value based on the page and limit values
-
-    const page = Number(req.query.page) || 1;
-    const limit = Number(req.query.limit) || 100;
-    const skip = (page - 1) * limit;
-    query = query.skip(skip).limit(limit);
-
-    //gate clause in case they search out of limit
-    if (req.query.page) {
-      //this will resolve to the number of documents that exist in the db
-      const numTours = await Tour.countDocuments();
-      //we need to send an error here so that we don't error out of the try block that we're in, and go to the catch block
-      //we will do better error handling soon to replace this
-      if (skip >= numTours) {
-        res.status(404).json({
-          status: 'failed',
-          message: 'This page does not exist',
-        });
-      }
-    }
-
     // ?? EXECUTE QUERY
-    const tours = await query;
+    //the constructor needs a query and query string. The query is Tour.find(), and the query string comes from the request
+    const features = new APIFeatures(Tour.find(), req.query)
+      .filter()
+      .sort()
+      .limitFields()
+      .paginate();
+    //have to call the class method now instead of the query variable we set up before
+    const tours = await features.query;
 
     // ?? SEND RESPONSE
     res.status(200).json({
