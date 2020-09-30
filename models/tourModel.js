@@ -60,6 +60,10 @@ const tourSchema = new mongoose.Schema(
     },
     //an array of start dates
     startDates: [Date],
+    secretTour: {
+      type: Boolean,
+      default: false,
+    },
     //the second argument in the Schema method is the options object
   },
   {
@@ -75,6 +79,8 @@ const tourSchema = new mongoose.Schema(
 tourSchema.virtual('durationWeeks').get(function () {
   return this.duration / 7;
 });
+
+// ?? DOCUMENT MIDDLEWARE
 
 //pre is a middleware that will run before an event. in this case the event is the save method, and therefore also the create() method. However it won't trigger from insertMany()
 //we will have access to the data to be saved via the this keyword, so we can act on it that way
@@ -92,6 +98,27 @@ tourSchema.pre('save', function (next) {
 //the post middleware funcs have access to the document that was just saved. called doc here
 // tourSchema.post('save', function (doc, next) {
 //   console.log(doc);
+//   next();
+// });
+
+// ?? QUERY MIDDLEWARE
+
+//this will point at the current query, rather than the current document
+//note that find is different from findOne, which is working behind the scenes of mongoose's findById method, etc, so we need regex instead of just 'find' (or we could specify two middlewares but that's not DRY)
+tourSchema.pre(/^find/, function (next) {
+  //use case here will be for "secret tours" that only appear to select groups of users
+  //doing it this way because if we set it to false, the ones we created before we created this attribute won't show up
+  //nb that mongoose is adding the default "false" to those that didn't have it, but in the DB itself, that attribute is blank
+  this.find({ secretTour: { $ne: true } });
+
+  //we can use this middleware to create new attributes on the object
+  this.start = Date.now();
+  next();
+});
+
+//for demonstration purposes: those new attributes persist so we can use them in the post middleware
+// tourSchema.post(/^find/, function (docs, next) {
+//   console.log(`Query took ${Date.now() - this.start} milliseconds`);
 //   next();
 // });
 
