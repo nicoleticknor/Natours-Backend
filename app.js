@@ -39,9 +39,21 @@ app.use('/api/v1/users', userRouter);
 //adding middleware here to catch any route requests that aren't handled by the two routes above. We have to put this here at the bottom because order matters in routes (if we put it above, everything would be handled with this catch-all route)
 //all method will run for all the CRUD verbs, and the wildcard * will handle any text
 app.all('*', (req, res, next) => {
-  res.status(404).json({
-    status: 'fail',
-    message: `Can't find ${req.originalUrl} on this server!`,
+  //when this route is triggered, all we want to do is create an error object and then pass it to the global error handler via next()
+  const err = new Error(`Can't find ${req.originalUrl} on this server!`);
+  err.status = 'fail';
+  err.statusCode = 404;
+  //whenever an argument is passed into next(), express assumes to be an error so it will skip all the other middlewares and go to our global error handling middleware
+  next(err);
+});
+
+//implementing one middleware for all error handling
+//express has built-in middleware for error handling, just specify err in the callback
+app.use((err, req, res, next) => {
+  //we may have a status code and a message from our other error handling set up next(err)
+  res.status(err.statusCode || 500).json({
+    status: err.status || 'failed',
+    message: err.message || 'error',
   });
 });
 
