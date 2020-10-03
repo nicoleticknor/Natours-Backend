@@ -1,5 +1,7 @@
 const Tour = require('../models/tourModel');
 const APIFeatures = require('../utils/apiFeatures');
+const AppError = require('../utils/appError');
+//could have put catchAsyn directly in the router, but then if one of the handlers was not async, it would be tricky to debug
 const catchAsync = require('../utils/catchAsync');
 
 // ** Aliasing for a popular route - middleware
@@ -25,6 +27,8 @@ exports.getAllTours = catchAsync(async (req, res, next) => {
   //have to call the class method now instead of the query variable we set up before
   const tours = await features.query;
 
+  // not adding a 404 error here because technically, 0 results that match the filters that the client requested is not an error, if there is zero documents in the database that meet those criteria
+
   // ?? SEND RESPONSE
   res.status(200).json({
     status: 'success',
@@ -35,7 +39,14 @@ exports.getAllTours = catchAsync(async (req, res, next) => {
 });
 
 exports.getTour = catchAsync(async (req, res, next) => {
+  console.log('hello');
+  // !! why does this error out with an undefined tour before the console log?
   const tour = await Tour.findById(req.params.id);
+  console.log(tour);
+
+  if (!tour) {
+    return next(new AppError('No tour found with that ID', 404));
+  }
 
   res.status(200).json({
     status: 'success',
@@ -58,6 +69,11 @@ exports.updateTour = catchAsync(async (req, res, next) => {
     //this runs the validators in the class object over again. otherwise the update would go through even if there were invalid fields
     runValidators: true,
   });
+
+  // !! 
+  if (!tour) {
+    return next(new AppError('No tour found with that ID', 404));
+  }
   res.status(200).json({
     status: 'success',
     data: {
@@ -67,7 +83,13 @@ exports.updateTour = catchAsync(async (req, res, next) => {
 });
 
 exports.deleteTour = catchAsync(async (req, res, next) => {
-  await Tour.findByIdAndDelete(req.params.id);
+  const tour = await Tour.findByIdAndDelete(req.params.id);
+
+  // !!
+  if (!tour) {
+    return next(new AppError('No tour found with that ID', 404));
+  }
+
   res.status(204).json({
     status: 'success',
     data: null,
