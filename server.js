@@ -3,6 +3,14 @@ const mongoose = require('mongoose');
 //since morgan is dependent on the dev environment variable, morgan won't work if app is declared first
 const dotenv = require('dotenv');
 
+//Some devs think these global handlers are a bad idea, but they are a safety net. Should also handle the error right where the error occurs (for example put a catch statement in the DB connection block)
+//putting this one at the top, because uncaught exceptions could happen at any part in the thread
+process.on('uncaughtException', err => {
+  console.log('Uncaught Exception. Shutting down...');
+  console.log('error name:', err.name, 'error message: ', err.message);
+  process.exit(1);
+});
+
 dotenv.config({ path: './config.env' });
 
 const app = require('./app');
@@ -38,3 +46,6 @@ process.on('unhandledRejection', err => {
     process.exit(1);
   });
 });
+
+//example uncaught exception
+// console.log(x);
