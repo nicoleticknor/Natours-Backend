@@ -39,7 +39,7 @@ exports.getAllTours = catchAsync(async (req, res, next) => {
 });
 
 exports.getTour = catchAsync(async (req, res, next) => {
-  console.log('hello');
+  // console.log('hello');
   // !! why does this error out with an undefined tour before the console log?
   const tour = await Tour.findById(req.params.id);
   console.log(tour);
