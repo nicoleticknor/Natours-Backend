@@ -24,6 +24,17 @@ mongoose
 
 const port = process.env.PORT || 3000;
 
-app.listen(port, () => {
+const server = app.listen(port, () => {
   console.log(`App running on port ${port}`);
+});
+
+// Node's built-in event handler
+process.on('unhandledRejection', err => {
+  console.log('error name:', err.name, 'error message: ', err.message);
+  console.log('Unhandled Promise Rejection. Shutting down...');
+  //close the server before disconnecting
+  server.close(() => {
+    //then disconnect. this crashes the app.
+    process.exit(1);
+  });
 });
