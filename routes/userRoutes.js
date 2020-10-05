@@ -6,6 +6,7 @@ const router = express.Router();
 
 //this is not RESTful, but that's okay; it doesn't make sense to have a GET to signup
 router.post('/signup', authController.signup);
+router.post('/login', authController.login);
 
 router
   .route('/')

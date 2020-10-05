@@ -21,6 +21,8 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Please provide a password'],
     minlength: 8,
+    //this prevents this from being returned to the client on sign in
+    select: false,
   },
   passwordConfirm: {
     type: String,
@@ -48,6 +50,15 @@ userSchema.pre('save', async function (next) {
   this.passwordConfirm = undefined;
   next();
 });
+
+// creating an instance method that will be available on all instances of the User model (all User documents)
+userSchema.methods.correctPassword = async function (
+  candidatePassword,
+  userPassword
+) {
+  // this.password is not available because we have it as select: false, that's why we need to pass in the userPassword
+  return await bcrypt.compare(candidatePassword, userPassword);
+};
 
 const User = mongoose.model('User', userSchema);
 
