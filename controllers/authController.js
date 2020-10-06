@@ -75,6 +75,7 @@ exports.protect = catchAsync(async (req, res, next) => {
     token,
     process.env.JWT_SECRET
   );
+  //note that error handling here happens in the errorController; we don't need to pass it anything because JWT will throw the error.
 
   // 3) Check if user still exists (so you can't use a token after a user deletes their account)
   // 4) Check if user changed password after token was issued (because if they did, they will need a new token under the new password)
