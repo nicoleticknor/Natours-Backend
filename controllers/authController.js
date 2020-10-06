@@ -81,6 +81,7 @@ exports.protect = catchAsync(async (req, res, next) => {
 
   // 3) Check if user still exists (so you can't use a token after a user deletes their account)
   const currentUser = await User.findById(decodedToken.id);
+  console.log(currentUser);
 
   if (!currentUser) {
     return next(
@@ -98,7 +99,20 @@ exports.protect = catchAsync(async (req, res, next) => {
   }
 
   // 5) Grant access to protected route
-  // putting there here in case we need it later
+  // we are going to use this user info later as part of the authorization processes
   req.user = currentUser;
   next();
 });
+
+//we need a way to pass arguments admin and lead-guide into this middleware, which we can't just do. So we need a wrapper function that accepts the array of roles
+exports.restrictTo = (...roles) => {
+  return (req, res, next) => {
+    //roles ['admin', 'lead-guide']
+    if (!roles.includes(req.user.role))
+      return next(
+        new AppError('You do not have permission to perform this action', 403)
+      );
+
+    next();
+  };
+};
