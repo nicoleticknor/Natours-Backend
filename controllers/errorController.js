@@ -66,17 +66,16 @@ module.exports = (err, req, res, next) => {
     console.log('err.name:', err.name);
     // MongoDB errors will be Operational, but will not be marked as such in our code, so we have to account for them here. There are three types we are building handler blocks for
     // 1) Invalid ID
-    if (error.path === '_id') {
+    if (err.path === '_id') {
       error = handleIDErrorDB(error);
     }
     // 2) Duplicate field names in Create
-    if (error.code === 11000) error = handleDuplicateErrorDB(error);
+    if (err.code === 11000) error = handleDuplicateErrorDB(error);
     // 3) Validation Errors in Update
-    if (error.name === 'ValidationError')
-      error = handleValidationErrorDB(error);
-    if (error.name === 'JsonWebTokenError') error = handleJWTError(error);
-    if (error.name === 'TokenExpiredError')
-      error = handleJWTExpiredError(error);
+    if (err.name === 'ValidationError') error = handleValidationErrorDB(error);
+    // !! can't find err.name anymore..? debug
+    if (err.name === 'JsonWebTokenError') error = handleJWTError(error);
+    if (err.name === 'TokenExpiredError') error = handleJWTExpiredError(error);
     sendErrorProd(error, res);
   }
 };

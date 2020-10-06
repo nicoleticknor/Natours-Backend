@@ -17,6 +17,8 @@ exports.signup = catchAsync(async (req, res, next) => {
     email: req.body.email,
     password: req.body.password,
     passwordConfirm: req.body.passwordConfirm,
+    // !! why doesn't the database persist this field?
+    passwordChangedAt: req.body.passwordChangedAt,
   });
 
   const token = signToken(newUser._id);
@@ -78,6 +80,25 @@ exports.protect = catchAsync(async (req, res, next) => {
   //note that error handling here happens in the errorController; we don't need to pass it anything because JWT will throw the error.
 
   // 3) Check if user still exists (so you can't use a token after a user deletes their account)
+  const currentUser = await User.findById(decodedToken.id);
+
+  if (!currentUser) {
+    return next(
+      // !! Mongoose is doing something in the findById method that errors out before this can happen.
+      new AppError('The user belonging to this token no longer exists.', 401)
+    );
+  }
+
   // 4) Check if user changed password after token was issued (because if they did, they will need a new token under the new password)
+  // if true, throw error
+  if (currentUser.changedPasswordAfter(decodedToken.iat)) {
+    return next(
+      new AppError('User recently changed password Please log in again.', 401)
+    );
+  }
+
+  // 5) Grant access to protected route
+  // putting there here in case we need it later
+  req.user = currentUser;
   next();
 });

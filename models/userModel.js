@@ -35,6 +35,7 @@ const userSchema = new mongoose.Schema({
       message: 'Password confirmation does not match password',
     },
   },
+  passwordChangedAt: Date,
 });
 
 //doing encryption on the model (rather than the controller), because it's to do with the data, rather than the business logic
@@ -58,6 +59,17 @@ userSchema.methods.correctPassword = async function (
 ) {
   // this.password is not available because we have it as select: false, that's why we need to pass in the userPassword
   return await bcrypt.compare(candidatePassword, userPassword);
+};
+
+userSchema.methods.changedPasswordAfter = function (JWTTimestamp) {
+  if (this.passwordChangedAt) {
+    const changedTimestamp = parseInt(
+      this.passwordChangedAt.getTime() / 1000,
+      10
+    );
+    return JWTTimestamp < changedTimestamp; // will return true or false
+  }
+  return false;
 };
 
 const User = mongoose.model('User', userSchema);
