@@ -3,7 +3,7 @@ const User = require('../models/userModel');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 
-const signToken = id => {
+const signToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRES_IN,
   });
@@ -52,4 +52,24 @@ exports.login = catchAsync(async (req, res, next) => {
     status: 'status',
     token,
   });
+});
+
+exports.protect = catchAsync(async (req, res, next) => {
+  // 1) verify token exists
+  let token;
+  if (
+    req.headers.authorization &&
+    req.headers.authorization.startsWith('Bearer')
+  ) {
+    token = req.headers.authorization.split(' ')[1];
+  }
+  if (!token) {
+    return next(
+      new AppError('You are not logged in! Please log in to get access.', 401)
+    );
+  }
+  // 2) validate token with JWT
+  // 3) Check if user still exists (so you can't use a token after a user deletes their account)
+  // 4) Check if user changed password after token was issued (because if they did, they will need a new token under the new password)
+  next();
 });
