@@ -21,6 +21,8 @@ const handleValidationErrorDB = err => {
   return new AppError(message, 400);
 };
 
+const handleJWTError = () => new AppError('Invalid token. Please log in again.', 401);
+
 const sendErrorDev = (err, res) => {
   //we may have a status code and a message from our other error handling set up next(err)
   res.status(err.statusCode || 500).json({
@@ -62,13 +64,14 @@ module.exports = (err, req, res, next) => {
     console.log('err.name:', err.name);
     // MongoDB errors will be Operational, but will not be marked as such in our code, so we have to account for them here. There are three types we are building handler blocks for
     // 1) Invalid ID
-    if (err.path === '_id') {
+    if (error.path === '_id') {
       error = handleIDErrorDB(error);
     }
     // 2) Duplicate field names in Create
-    if (err.code === 11000) error = handleDuplicateErrorDB(error);
+    if (error.code === 11000) error = handleDuplicateErrorDB(error);
     // 3) Validation Errors in Update
-    if (err.name === 'ValidationError') error = handleValidationErrorDB(error);
+    if (error.name === 'ValidationError') error = handleValidationErrorDB(error);
+    if (error.name === 'JsonWebTokenError') error = handleJWTError(error);
     sendErrorProd(error, res);
   }
 };
