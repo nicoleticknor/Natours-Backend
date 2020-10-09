@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 const { promisify } = require('util');
 const User = require('../models/userModel');
 const catchAsync = require('../utils/catchAsync');
@@ -159,4 +160,37 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
   }
 });
 
-exports.resetPassword = catchAsync(async (req, res, next) => { });
+exports.resetPassword = catchAsync(async (req, res, next) => {
+  // 1) get user based on token from the route param /:token
+  // the token is stored encrypted in the db, so we need to encrypt what we get from req.params
+  const hashedToken = crypto
+    .createHash('sha256')
+    .update(req.params.token)
+    .digest('hex');
+
+  const user = await User.findOne({
+    passwordResetToken: hashedToken,
+    passwordResetExpires: { $gt: Date.now() },
+  });
+
+  // 2) if token has not expired and there is a user, set the new password
+  if (!user) {
+    return next(new AppError('Token is invalid or has expired', 400));
+  }
+
+  // 3) update password-related properties for current user (changedPasswordAt will be updated in the middleware, so that we can reuse it for the other password change handler that will be built later)
+  user.password = req.body.password;
+  user.passwordConfirm = req.body.passwordConfirm;
+  user.passwordResetToken = undefined;
+  user.passwordResetExpires = undefined;
+  //we run save because we want to run all the validators and the save middleware function that encrypts passwords
+  await user.save();
+
+  // 4) Log the user in; send JWT to client
+  const token = signToken(user._id);
+
+  res.status(200).json({
+    status: 'status',
+    token,
+  });
+});

@@ -47,6 +47,15 @@ const userSchema = new mongoose.Schema({
   passwordResetExpires: Date,
 });
 
+userSchema.pre('save', function (next) {
+  //if the password property on this has been modified, or if this is new
+  if (!this.isModified('password') || this.isNew) return next();
+
+  // this hack is here just in case this happens after the token is set with the user info from the database before the database is updated with this property.
+  this.passwordChangedAt = Date.now() - 1000;
+  next();
+});
+
 //doing encryption on the model (rather than the controller), because it's to do with the data, rather than the business logic
 userSchema.pre('save', async function (next) {
   //gate clause to exit out of this function if the password hasn't changed
