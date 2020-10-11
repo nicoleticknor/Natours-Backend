@@ -12,6 +12,18 @@ const signToken = (id) => {
   });
 };
 
+const createAndSendToken = (user, statusCode, res) => {
+  const token = signToken(user._id);
+
+  res.status(statusCode).json({
+    status: 'success',
+    token,
+    data: {
+      user: user,
+    },
+  });
+};
+
 exports.signup = catchAsync(async (req, res, next) => {
   const newUser = await User.create({
     // specifying each field for security (to avoid someone writing to the admin field)
@@ -19,19 +31,10 @@ exports.signup = catchAsync(async (req, res, next) => {
     email: req.body.email,
     password: req.body.password,
     passwordConfirm: req.body.passwordConfirm,
-    // !! why doesn't the database persist this field?
     passwordChangedAt: req.body.passwordChangedAt,
   });
 
-  const token = signToken(newUser._id);
-
-  res.status(201).json({
-    status: 'success',
-    token,
-    data: {
-      user: newUser,
-    },
-  });
+  createAndSendToken(newUser, 201, res);
 });
 
 exports.login = catchAsync(async (req, res, next) => {
@@ -52,11 +55,7 @@ exports.login = catchAsync(async (req, res, next) => {
   }
 
   // 3) if no error, send the token to the client
-  const token = signToken(user._id);
-  res.status(200).json({
-    status: 'status',
-    token,
-  });
+  createAndSendToken(user, 200, res);
 });
 
 exports.protect = catchAsync(async (req, res, next) => {
@@ -187,10 +186,28 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
   await user.save();
 
   // 4) Log the user in; send JWT to client
-  const token = signToken(user._id);
+  createAndSendToken(user, 200, res);
+});
 
-  res.status(200).json({
-    status: 'status',
-    token,
-  });
+exports.updatePassword = catchAsync(async (req, res, next) => {
+  // 1) get the user from the collection
+  const user = await User.findById(req.user.id).select('+password');
+
+  // 2) check if the POSTed password is correct
+  if (!(await user.correctPassword(req.body.currentPassword, user.password))) {
+    return next(new AppError('Your current password is wrong', 401));
+  }
+
+  // 3) If so, update the password
+  user.password = req.body.password;
+  user.passwordConfirm = req.body.passwordConfirm;
+  // have to use the save function instead of the findByIdAndUpdate function so that we get the middleware that's in the schema on save()
+  await user.save();
+
+  // !! NB there's a Postman config issue where if you create an error in password/passwordConfirm,
+  // !! the token still updates to something invalid. So you have to sign the user in again to reset the token
+  // !! he doesn't go over this - perhaps fix this yourself later
+
+  // 4) log the user in, send jwt with new password
+  createAndSendToken(user, 200, res);
 });
