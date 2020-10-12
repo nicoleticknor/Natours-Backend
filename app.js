@@ -2,6 +2,7 @@
 
 const express = require('express');
 const morgan = require('morgan');
+const rateLimit = require('express-rate-limit');
 
 const AppError = require('./utils/appError');
 const globalErrorHandler = require('./controllers/errorController');
@@ -18,6 +19,17 @@ if (process.env.NODE_ENV === 'development') {
   // NB you can use morgan's logger to save the outputs to a location
   app.use(morgan('dev'));
 }
+
+//rate limiter to try to prevent DOS and brute force attacks
+const limiter = rateLimit({
+  //number of requests
+  max: 100,
+  //per milliseconds
+  windowMs: 60 * 60 * 1000,
+  message: 'Too many requests from this IP. Please try again in an hour',
+});
+//the limiter will only apply to the routes that start with /api
+app.use('/api', limiter);
 
 //this is express' built-in body parser
 app.use(express.json());

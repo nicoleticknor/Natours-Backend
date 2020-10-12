@@ -97,7 +97,7 @@ exports.protect = catchAsync(async (req, res, next) => {
 
   // 3) Check if user still exists (so you can't use a token after a user deletes their account)
   const currentUser = await User.findById(decodedToken.id);
-  console.log(currentUser);
+  // console.log(currentUser);
 
   if (!currentUser) {
     return next(
