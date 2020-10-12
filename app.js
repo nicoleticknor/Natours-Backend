@@ -3,6 +3,7 @@
 const express = require('express');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
+const helmet = require('helmet');
 
 const AppError = require('./utils/appError');
 const globalErrorHandler = require('./controllers/errorController');
@@ -14,13 +15,18 @@ const app = express();
 // * Middlewares
 //app.use adds middleware to the "middleware stack" which happens in a chain for every request (unless a specific route is specified)
 
+// ?? Set Security HTTP headers
+//Use this package early in the middleware stack. It's a collection of 14 smaller middlewares and is best practice to use in all apps
+app.use(helmet());
+
+// ?? Development logging
 //to only use morgan when we are in development environment
 if (process.env.NODE_ENV === 'development') {
   // NB you can use morgan's logger to save the outputs to a location
   app.use(morgan('dev'));
 }
 
-//rate limiter to try to prevent DOS and brute force attacks
+// ?? limit requests from same IP
 const limiter = rateLimit({
   //number of requests
   max: 100,
@@ -31,12 +37,14 @@ const limiter = rateLimit({
 //the limiter will only apply to the routes that start with /api
 app.use('/api', limiter);
 
-//this is express' built-in body parser
-app.use(express.json());
+// ?? Body parser, reading data from body into req.body
+//this is express' built-in body parser. Won't accept bodies larger than 10kb
+app.use(express.json({ limit: '10kb' }));
 
-//to allow our markup and style sheets
+// ?? to allow serving static files - our markup and style sheets
 app.use(express.static(`${__dirname}/public`));
 
+// ?? test middleware
 app.use((req, res, next) => {
   //creating a k/v in the req object that we can call later in another middleware function (in this case, the route itself)
   req.requestTime = new Date().toISOString();
