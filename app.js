@@ -4,6 +4,8 @@ const express = require('express');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
+const mongoSanitize = require('express-mongo-sanitize');
+const xss = require('xss-clean');
 
 const AppError = require('./utils/appError');
 const globalErrorHandler = require('./controllers/errorController');
@@ -40,6 +42,15 @@ app.use('/api', limiter);
 // ?? Body parser, reading data from body into req.body
 //this is express' built-in body parser. Won't accept bodies larger than 10kb
 app.use(express.json({ limit: '10kb' }));
+
+// ?? Data sanitization against NOSQL query injection
+//this library goes through all the body data and removes dollar signs
+app.use(mongoSanitize());
+
+// ?? Data sanitization against XSS (cross-site scripting attacks)
+//mongo is already a good protection against XSS because validation on the schemas prevents this type of thing
+// but we'll use this library anyway
+app.use(xss());
 
 // ?? to allow serving static files - our markup and style sheets
 app.use(express.static(`${__dirname}/public`));
