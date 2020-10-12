@@ -6,6 +6,7 @@ const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
 const mongoSanitize = require('express-mongo-sanitize');
 const xss = require('xss-clean');
+const hpp = require('hpp');
 
 const AppError = require('./utils/appError');
 const globalErrorHandler = require('./controllers/errorController');
@@ -48,9 +49,26 @@ app.use(express.json({ limit: '10kb' }));
 app.use(mongoSanitize());
 
 // ?? Data sanitization against XSS (cross-site scripting attacks)
-//mongo is already a good protection against XSS because validation on the schemas prevents this type of thing
-// but we'll use this library anyway
+/*mongo is already a good protection against XSS because validation on the schemas prevents this type of thing
+but we'll use this library anyway*/
 app.use(xss());
+
+// ?? Prevent parameter pollution
+/* clears up the query string so that if we have duplicate/conflicting filters, it still processes the last one
+white-listing an array of properties that we actually want to allow for dupes in the query string
+we could do something more complex than manually entering this array, but we are just keeping this simple */
+app.use(
+  hpp({
+    whitelist: [
+      'duration',
+      'ratingsAverage',
+      'ratingsQuantity',
+      'maxGroupSize',
+      'difficulty',
+      'price',
+    ],
+  })
+);
 
 // ?? to allow serving static files - our markup and style sheets
 app.use(express.static(`${__dirname}/public`));
