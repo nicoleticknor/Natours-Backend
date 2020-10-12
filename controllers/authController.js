@@ -14,6 +14,21 @@ const signToken = (id) => {
 
 const createAndSendToken = (user, statusCode, res) => {
   const token = signToken(user._id);
+  const cookieOptions = {
+    expires: new Date(
+      Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000
+    ),
+    //cookie can't be accessed or modified in any way by the browser
+    httpOnly: true,
+  };
+
+  //this removes the user's password from the output data
+  user.password = undefined;
+
+  /*cookie will only be sent on a secure connection (https) with secure = true 
+  we aren't using https in dev, so that's only set in prod environment */
+  if (process.env.NODE_ENV === 'production') cookieOptions.secure = true;
+  res.cookie('jwt', token, cookieOptions);
 
   res.status(statusCode).json({
     status: 'success',
@@ -204,7 +219,7 @@ exports.updatePassword = catchAsync(async (req, res, next) => {
   // have to use the save function instead of the findByIdAndUpdate function so that we get the middleware that's in the schema on save()
   await user.save();
 
-  // !! NB there's a Postman config issue where if you create an error in password/passwordConfirm,
+  // !! NB there's a Postman config issue where if you create an error in password/passwordConfirm (or any unresolved handler error),
   // !! the token still updates to something invalid. So you have to sign the user in again to reset the token
   // !! he doesn't go over this - perhaps fix this yourself later
 
