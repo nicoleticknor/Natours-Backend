@@ -45,6 +45,11 @@ const userSchema = new mongoose.Schema({
   passwordChangedAt: Date,
   passwordResetToken: String,
   passwordResetExpires: Date,
+  active: {
+    type: Boolean,
+    default: true,
+    select: false,
+  },
 });
 
 userSchema.pre('save', function (next) {
@@ -53,6 +58,12 @@ userSchema.pre('save', function (next) {
 
   // this hack is here just in case this happens after the token is set with the user info from the database before the database is updated with this property.
   this.passwordChangedAt = Date.now() - 1000;
+  next();
+});
+
+//any query that starts with find will run this middleware. This is to prevent active: false users from showing up in browse users
+userSchema.pre(/^find/, function (next) {
+  this.find({ active: { $ne: false } });
   next();
 });
 
