@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const slugify = require('slugify');
+// const User = require('./userModel');
 
 const tourSchema = new mongoose.Schema(
   {
@@ -120,6 +121,9 @@ const tourSchema = new mongoose.Schema(
         day: Number,
       },
     ],
+    // guides: Array,
+    // thjis is how to reference another schema
+    guides: [{ type: mongoose.Schema.ObjectId, ref: 'User' }],
     //the second argument in the Schema method is the options object
   },
   {
@@ -145,9 +149,12 @@ tourSchema.pre('save', function (next) {
   next();
 });
 
-//for demonstration that we can have more than one pre method for a single method (save)
-// tourSchema.pre('save', function (next) {
-//   console.log('Will save document...');
+//we can have more than one pre method for a single method (save)
+// * if we were embedding the guides, this is how we would do it (with an array as the guides type in the model)
+// * since we aren't, we only have to use a child reference in the model itself (above)
+// tourSchema.pre('save', async function (next) {
+//   const guidesPromises = this.guides.map(async (id) => await User.findById(id));
+//   this.guides = await Promise.all(guidesPromises);
 //   next();
 // });
 
