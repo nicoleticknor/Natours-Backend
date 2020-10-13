@@ -12,6 +12,7 @@ const AppError = require('./utils/appError');
 const globalErrorHandler = require('./controllers/errorController');
 const tourRouter = require('./routes/tourRoutes');
 const userRouter = require('./routes/userRoutes');
+const reviewRouter = require('./routes/reviewRoutes');
 
 const app = express();
 
@@ -86,6 +87,7 @@ app.use((req, res, next) => {
 //this is how we can export these into separate files and then just call tourRouter.get('/') for that whole /api/v1/tours route piece
 app.use('/api/v1/tours', tourRouter);
 app.use('/api/v1/users', userRouter);
+app.use('/api/v1/reviews', reviewRouter);
 
 //adding middleware here to catch any route requests that aren't handled by the two routes above. We have to put this here at the bottom because order matters in routes (if we put it above, everything would be handled with this catch-all route)
 //all method will run for 'all' the CRUD verbs, and the wildcard * will handle any text
