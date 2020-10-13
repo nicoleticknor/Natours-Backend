@@ -39,10 +39,20 @@ exports.getAllTours = catchAsync(async (req, res, next) => {
 });
 
 exports.getTour = catchAsync(async (req, res, next) => {
-  // console.log('hello');
-  // !! why does this error out with an undefined tour before the console log?
+  // !! why does this error out with an undefined tour before the console log when there is no tour?
+
+  // ?? using the populate method to fill out child reference data in the query
+  // adding the populate method will populate the data about whatever parameter is passed in that is a child reference
+  // * can be done simply by specifying the path:
+  // const tour = await Tour.findById(req.params.id).populate('guides');
+  // * or by passing in an options object:
+  // const tour = await Tour.findById(req.params.id).populate({
+  //   path: 'guides',
+  //   select: '-__v -passwordChangedAt',
+  // });
+  // * or as middleware, because we want it to run on every find method for the tours schema (see tourModel)
   const tour = await Tour.findById(req.params.id);
-  console.log(tour);
+  // console.log(tour);
 
   if (!tour) {
     return next(new AppError('No tour found with that ID', 404));

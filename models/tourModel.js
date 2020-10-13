@@ -122,7 +122,7 @@ const tourSchema = new mongoose.Schema(
       },
     ],
     // guides: Array,
-    // thjis is how to reference another schema
+    // this is how to reference another schema
     guides: [{ type: mongoose.Schema.ObjectId, ref: 'User' }],
     //the second argument in the Schema method is the options object
   },
@@ -176,6 +176,14 @@ tourSchema.pre(/^find/, function (next) {
 
   //we can use this middleware to create new attributes on the object
   this.start = Date.now();
+  next();
+});
+
+tourSchema.pre(/^find/, function (next) {
+  this.populate({
+    path: 'guides',
+    select: '-__v -passwordChangedAt',
+  });
   next();
 });
 
