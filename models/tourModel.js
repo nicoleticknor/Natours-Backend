@@ -93,6 +93,33 @@ const tourSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    startLocation: {
+      // Mongo uses a special data type called GeoJSON for geospatial data
+      //this is actually an embedded object, not an options object. The options are nested in each key
+      type: {
+        type: String,
+        default: 'Point',
+        enum: ['Point'],
+      },
+      coordinates: [Number],
+      address: String,
+      description: String,
+    },
+    // this is how we embed/denormalize data with Mongo. This array of objects will create new documents for each instance
+    locations: [
+      {
+        type: {
+          type: String,
+          default: 'Point',
+          enum: ['Point'],
+        },
+        coordinates: [Number],
+        address: String,
+        description: String,
+        // the day of the tour that people will go to this location
+        day: Number,
+      },
+    ],
     //the second argument in the Schema method is the options object
   },
   {
