@@ -39,6 +39,7 @@ const reviewSchema = new mongoose.Schema(
   }
 );
 
+// * to populate user data in parent queries
 reviewSchema.pre(/^find/, function (next) {
   // to populate tour and user info when querying reviews. However this clutters the tour query with the review virtual populate
 

@@ -1,6 +1,8 @@
 const express = require('express');
 
-const router = express.Router();
+// * these options allow this router access to the params in other routers
+// see tourRoutes.js for more info
+const router = express.Router({ mergeParams: true });
 const reviewController = require('../controllers/reviewController');
 const authController = require('../controllers/authController');
 
