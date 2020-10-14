@@ -51,7 +51,7 @@ exports.getTour = catchAsync(async (req, res, next) => {
   //   select: '-__v -passwordChangedAt',
   // });
   // * or as middleware, because we want it to run on every find method for the tours schema (see tourModel)
-  const tour = await Tour.findById(req.params.id);
+  const tour = await Tour.findById(req.params.id).populate('reviews');
   // console.log(tour);
 
   if (!tour) {

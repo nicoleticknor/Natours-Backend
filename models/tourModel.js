@@ -132,12 +132,21 @@ const tourSchema = new mongoose.Schema(
   }
 );
 
-//virtual properties are ones that are calculated fields rather than ones persisted in the DB. Doing this here keeps business logic separate from application logic
-//note that we can't query anything that's not in the DB
+// * virtual fields and virtual populate
+//virtual fields are ones that are calculated rather than persisted in the DB. note that we can't query them
 //use the get method because this virtual property will be created each time we use the "get" method from the database
 //getter can't have an arrow function because we need the this keyword
 tourSchema.virtual('durationWeeks').get(function () {
   return this.duration / 7;
+});
+
+// virtual populate (instead of child referencing)
+tourSchema.virtual('reviews', {
+  ref: 'Review',
+  // in the Review model, the foreign key to tours is called "tours"
+  foreignField: 'tour',
+  // in the tour model, the primary key is "_id"
+  localField: '_id',
 });
 
 // ?? DOCUMENT MIDDLEWARE
@@ -158,7 +167,7 @@ tourSchema.pre('save', function (next) {
 //   next();
 // });
 
-//the post middleware funcs have access to the document that was just saved. called doc here
+// * the post middleware funcs have access to the document that was just saved. called doc here
 // tourSchema.post('save', function (doc, next) {
 //   console.log(doc);
 //   next();

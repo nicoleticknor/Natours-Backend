@@ -40,10 +40,18 @@ const reviewSchema = new mongoose.Schema(
 );
 
 reviewSchema.pre(/^find/, function (next) {
+  // to populate tour and user info when querying reviews. However this clutters the tour query with the review virtual populate
+
+  // this.populate({
+  //   path: 'tour',
+  //   select: 'name',
+  // }).populate({
+  //   path: 'user',
+  //   select: 'name photo',
+  // });
+
+  // this de-clutters the tour query so that the reviews don't contain duplicate into about the tour within them
   this.populate({
-    path: 'tour',
-    select: 'name',
-  }).populate({
     path: 'user',
     select: 'name photo',
   });
