@@ -1,5 +1,6 @@
 const Review = require('../models/reviewModel');
 const catchAsync = require('../utils/catchAsync');
+const factory = require('./handlerFactory');
 
 // getting all reviews
 exports.getAllReviews = catchAsync(async (req, res, next) => {
@@ -17,7 +18,8 @@ exports.getAllReviews = catchAsync(async (req, res, next) => {
   });
 });
 
-//creating new reviews
+// * old format to create new reviews
+/*
 exports.createReview = catchAsync(async (req, res, next) => {
   // to allow nested routes
   if (!req.body.tour) req.body.tour = req.params.tourId;
@@ -29,3 +31,18 @@ exports.createReview = catchAsync(async (req, res, next) => {
     data: { Review: newReview },
   });
 });
+*/
+
+// * new format for creating reviews - factory functions
+//middleware to grab user Id and tour Id
+exports.setTourUserIds = (req, res, next) => {
+  // to allow nested routes
+  if (!req.body.tour) req.body.tour = req.params.tourId;
+  //we get the user object from the protect middleware
+  if (!req.body.user) req.body.user = req.user.id;
+  next();
+};
+exports.createReview = factory.createOne(Review);
+
+exports.updateReview = factory.updateOne(Review);
+exports.deleteReview = factory.deleteOne(Review);

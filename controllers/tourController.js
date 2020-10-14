@@ -3,6 +3,7 @@ const APIFeatures = require('../utils/apiFeatures');
 const AppError = require('../utils/appError');
 //could have put catchAsyn directly in the router, but then if one of the handlers was not async, it would be tricky to debug
 const catchAsync = require('../utils/catchAsync');
+const factory = require('./handlerFactory');
 
 // ** Aliasing for a popular route - middleware
 //search for the five best tours, sorted by price. query string would be limit=5&sort=-ratingsAverage,price
@@ -64,47 +65,26 @@ exports.getTour = catchAsync(async (req, res, next) => {
   });
 });
 
-exports.createTour = catchAsync(async (req, res, next) => {
-  const newTour = await Tour.create(req.body);
-  res.status(201).json({
-    status: 'success',
-    data: { tour: newTour },
-  });
-});
+exports.createTour = factory.createOne(Tour);
 
-exports.updateTour = catchAsync(async (req, res, next) => {
-  //another helper method from mongoose. see mongoose docs for explanation
-  const tour = await Tour.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-    //this runs the validators in the class object over again. otherwise the update would go through even if there were invalid fields
-    runValidators: true,
-  });
+exports.updateTour = factory.updateOne(Tour);
 
-  // !! 
-  if (!tour) {
-    return next(new AppError('No tour found with that ID', 404));
-  }
-  res.status(200).json({
-    status: 'success',
-    data: {
-      tour,
-    },
-  });
-});
+// * previous delete handler
+// exports.deleteTour = catchAsync(async (req, res, next) => {
+//   const tour = await Tour.findByIdAndDelete(req.params.id);
 
-exports.deleteTour = catchAsync(async (req, res, next) => {
-  const tour = await Tour.findByIdAndDelete(req.params.id);
+//   if (!tour) {
+//     return next(new AppError('No tour found with that ID', 404));
+//   }
 
-  // !!
-  if (!tour) {
-    return next(new AppError('No tour found with that ID', 404));
-  }
+//   res.status(204).json({
+//     status: 'success',
+//     data: null,
+//   });
+// });
 
-  res.status(204).json({
-    status: 'success',
-    data: null,
-  });
-});
+// * Delete using the factory function
+exports.deleteTour = factory.deleteOne(Tour);
 
 //MongoDB has a data aggregation pipeline that we can use for all kinds of data calcs
 exports.getTourStats = catchAsync(async (req, res, next) => {
