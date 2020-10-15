@@ -1,8 +1,9 @@
 const Review = require('../models/reviewModel');
-const catchAsync = require('../utils/catchAsync');
+// const catchAsync = require('../utils/catchAsync');
 const factory = require('./handlerFactory');
 
-// getting all reviews
+// * old format for get all reviews
+/*
 exports.getAllReviews = catchAsync(async (req, res, next) => {
   // 1) check if there's a tour id coming in from the params (mergeparams) and assign it to a variable
   let filter;
@@ -17,6 +18,9 @@ exports.getAllReviews = catchAsync(async (req, res, next) => {
     data: { reviews },
   });
 });
+*/
+
+exports.getAllReviews = factory.getAll(Review);
 
 // * old format to create new reviews
 /*
@@ -46,3 +50,4 @@ exports.createReview = factory.createOne(Review);
 
 exports.updateReview = factory.updateOne(Review);
 exports.deleteReview = factory.deleteOne(Review);
+exports.getReview = factory.getOne(Review);

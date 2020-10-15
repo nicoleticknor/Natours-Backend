@@ -1,7 +1,4 @@
 const Tour = require('../models/tourModel');
-const APIFeatures = require('../utils/apiFeatures');
-const AppError = require('../utils/appError');
-//could have put catchAsyn directly in the router, but then if one of the handlers was not async, it would be tricky to debug
 const catchAsync = require('../utils/catchAsync');
 const factory = require('./handlerFactory');
 
@@ -17,73 +14,11 @@ exports.aliasTopTours = (req, res, next) => {
   next();
 };
 
-exports.getAllTours = catchAsync(async (req, res, next) => {
-  // ?? EXECUTE QUERY
-  //the constructor needs a query and query string. The query is Tour.find(), and the query string comes from the request
-  const features = new APIFeatures(Tour.find(), req.query)
-    .filter()
-    .sort()
-    .limitFields()
-    .paginate();
-  //have to call the class method now instead of the query variable we set up before
-  const tours = await features.query;
-
-  // not adding a 404 error here because technically, 0 results that match the filters that the client requested is not an error, if there is zero documents in the database that meet those criteria
-
-  // ?? SEND RESPONSE
-  res.status(200).json({
-    status: 'success',
-    //good practice to do this when sending an array / multiple objects
-    results: tours.length,
-    data: { tours },
-  });
-});
-
-exports.getTour = catchAsync(async (req, res, next) => {
-  // !! why does this error out with an undefined tour before the console log when there is no tour?
-
-  // ?? using the populate method to fill out child reference data in the query
-  // adding the populate method will populate the data about whatever parameter is passed in that is a child reference
-  // * can be done simply by specifying the path:
-  // const tour = await Tour.findById(req.params.id).populate('guides');
-  // * or by passing in an options object:
-  // const tour = await Tour.findById(req.params.id).populate({
-  //   path: 'guides',
-  //   select: '-__v -passwordChangedAt',
-  // });
-  // * or as middleware, because we want it to run on every find method for the tours schema (see tourModel)
-  const tour = await Tour.findById(req.params.id).populate('reviews');
-  // console.log(tour);
-
-  if (!tour) {
-    return next(new AppError('No tour found with that ID', 404));
-  }
-
-  res.status(200).json({
-    status: 'success',
-    data: { tour },
-  });
-});
-
+// * see previous commits for comments explaining the populate method
+exports.getTour = factory.getOne(Tour, { path: 'reviews' });
+exports.getAllTours = factory.getAll(Tour);
 exports.createTour = factory.createOne(Tour);
-
 exports.updateTour = factory.updateOne(Tour);
-
-// * previous delete handler
-// exports.deleteTour = catchAsync(async (req, res, next) => {
-//   const tour = await Tour.findByIdAndDelete(req.params.id);
-
-//   if (!tour) {
-//     return next(new AppError('No tour found with that ID', 404));
-//   }
-
-//   res.status(204).json({
-//     status: 'success',
-//     data: null,
-//   });
-// });
-
-// * Delete using the factory function
 exports.deleteTour = factory.deleteOne(Tour);
 
 //MongoDB has a data aggregation pipeline that we can use for all kinds of data calcs
