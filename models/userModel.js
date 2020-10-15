@@ -61,12 +61,6 @@ userSchema.pre('save', function (next) {
   next();
 });
 
-//any query that starts with find will run this middleware. This is to prevent active: false users from showing up in browse users
-userSchema.pre(/^find/, function (next) {
-  this.find({ active: { $ne: false } });
-  next();
-});
-
 //doing encryption on the model (rather than the controller), because it's to do with the data, rather than the business logic
 userSchema.pre('save', async function (next) {
   //gate clause to exit out of this function if the password hasn't changed
@@ -78,6 +72,12 @@ userSchema.pre('save', async function (next) {
 
   //we only needed this field for the signup validation. Once we click save, we want to delete that / not persist it in the database, so we are setting it to undefined
   this.passwordConfirm = undefined;
+  next();
+});
+
+//any query that starts with find will run this middleware. This is to prevent active: false users from showing up in browse users
+userSchema.pre(/^find/, function (next) {
+  this.find({ active: { $ne: false } });
   next();
 });
 
