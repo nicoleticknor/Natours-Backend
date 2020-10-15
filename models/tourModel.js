@@ -132,6 +132,14 @@ const tourSchema = new mongoose.Schema(
   }
 );
 
+// * indexing tour documents by price ascending and ratingsAverage descending
+// * note that once you create an index, you have to delete it via Compass (can't just remove the line of code)
+// these will be a popular filter options, so indexing in advance improves performance
+// this is because it has to search only the first n documents to determine which docs to return, instead of having to search them all
+// study access patterns to determine which fields to index. Storage memory increases with indexes, so don't do these for models that have high write to read ratios
+tourSchema.index({ price: 1, ratingsAverage: -1 });
+tourSchema.index({ slug: 1 });
+
 // * virtual fields and virtual populate
 //virtual fields are ones that are calculated rather than persisted in the DB. note that we can't query them
 //use the get method because this virtual property will be created each time we use the "get" method from the database
