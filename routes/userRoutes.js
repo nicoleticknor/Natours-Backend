@@ -17,6 +17,13 @@ router.patch(
   authController.updatePassword
 );
 
+// * middleware to get the user object, convert the user object into req.params to be passed into the getUser function, then call getUser
+router.get(
+  '/me',
+  authController.protect,
+  userController.getMe,
+  userController.getUser
+);
 router.patch('/updateMe', authController.protect, userController.updateMe);
 //even though we aren't actually deleting anything from the DB, it's fine to use this HTTP method
 router.delete('/deleteMe', authController.protect, userController.deleteMe);

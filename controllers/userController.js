@@ -52,6 +52,11 @@ exports.deleteMe = catchAsync(async (req, res, next) => {
   });
 });
 
+// to allow the getMe route to use the factory function with the user object instead of req.params
+exports.getMe = (req, res, next) => {
+  req.params.id = req.user.id;
+  next();
+};
 exports.getUser = factory.getOne(User);
 exports.getAllUsers = factory.getAll(User);
 // !! do NOT update passwords with this
