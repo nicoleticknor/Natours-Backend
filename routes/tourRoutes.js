@@ -1,7 +1,6 @@
 const express = require('express');
 
 const router = express.Router();
-//instead of destructuring, just importing the whole exports object
 const tourController = require('../controllers/tourController');
 const authController = require('../controllers/authController');
 const reviewRouter = require('./reviewRoutes');
@@ -29,12 +28,12 @@ router.param('id', (req, res, next, val) => {
 // we also have to give the review router access to the /:tourId param - see reviewRoutes.js
 router.use('/:tourId/reviews', reviewRouter);
 
-//adding aliasing for a popular route using middleware
+//* aliasing for a popular route using middleware
 router
   .route('/top-5-best')
   .get(tourController.aliasTopTours, tourController.getAllTours);
 
-//the route for the aggregate pipeline
+//* route for the aggregate pipeline
 router.route('/tour-stats').get(tourController.getTourStats);
 router
   .route('/monthly-plan/:year')
@@ -44,6 +43,13 @@ router
     tourController.getMonthlyPlan
   );
 
+//* route for finding tours within a specific radius
+// this is the standard way of specifying a url that contains a lot of options, rather than making them into a query string
+router
+  .route('/tours-within/:distance/centre/:latlng/unit/:unit')
+  .get(tourController.getToursWithin);
+
+// * routes for all tours
 router
   .route('/')
   .get(tourController.getAllTours)
@@ -53,6 +59,7 @@ router
     tourController.createTour
   );
 
+// * routes for a specific tour
 router
   .route('/:id')
   .get(tourController.getTour)

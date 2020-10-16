@@ -140,6 +140,9 @@ const tourSchema = new mongoose.Schema(
 // study access patterns to determine which fields to index. Storage memory increases with indexes, so don't do these for models that have high write to read ratios
 tourSchema.index({ price: 1, ratingsAverage: -1 });
 tourSchema.index({ slug: 1 });
+// for geospatial data, the index has to be either a 2D sphere index if the data describes real points on an earth-like sphere, or 
+// a 2D index for fictional points on a 2D plane. we are using a 2D sphere
+tourSchema.index({ startLocation: '2dsphere' });
 
 // * virtual fields and virtual populate
 //virtual fields are ones that are calculated rather than persisted in the DB. note that we can't query them
