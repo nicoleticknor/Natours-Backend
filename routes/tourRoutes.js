@@ -43,11 +43,14 @@ router
     tourController.getMonthlyPlan
   );
 
-//* route for finding tours within a specific radius
+//* finding tours within a specific radius
 // this is the standard way of specifying a url that contains a lot of options, rather than making them into a query string
 router
   .route('/tours-within/:distance/centre/:latlng/unit/:unit')
   .get(tourController.getToursWithin);
+
+//* finding the distance between all tours and a certain point
+router.route('/distances/:latlng/unit/:unit').get(tourController.getDistances);
 
 // * routes for all tours
 router

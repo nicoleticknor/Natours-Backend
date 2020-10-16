@@ -141,6 +141,7 @@ exports.getToursWithin = catchAsync(async (req, res, next) => {
 
   // this is a mongoose operator that we can search for tours whose startLocations match
   const tours = await Tour.find({
+    // note that lng lat is the required order, not lat lng
     startLocation: { $geoWithin: { $centerSphere: [[lng, lat], radius] } },
   });
 
@@ -149,6 +150,56 @@ exports.getToursWithin = catchAsync(async (req, res, next) => {
     results: tours.length,
     data: {
       data: tours,
+    },
+  });
+});
+
+// * MongoDB also allows geospatial aggregation, used here to calculate the distance to all tours from a certain point
+exports.getDistances = catchAsync(async (req, res, next) => {
+  const { latlng, unit } = req.params;
+  const [lat, lng] = latlng.split(',');
+
+  const multiplier = unit === 'mi' ? 0.000621371 : 0.001;
+
+  if (!lat || !lng) {
+    next(
+      new AppError(
+        'Please provide latitude and longitude in the format lat,lng',
+        400
+      )
+    );
+  }
+
+  // aggregation pipeline for geospatial data only contains one stage, and it requires that at least one of the fields contains a geospatial index (startLocation here)
+  // we are also adding the project stage, so that we can adjust the data returned
+  // if you only have one geospatial index, it will automatically use that one. If you have more than one, you have to define it with the keys parameter (see documentation)
+  const distances = await Tour.aggregate([
+    {
+      $geoNear: {
+        // near is the point that you want to calculate the distances from (the point passed in to the fnc)
+        near: {
+          type: 'Point',
+          // making sure they're converted to Number data type
+          coordinates: [lng * 1, lat * 1],
+        },
+        // this is the name of the field that will be created as a result of this process, and where all the distances will be stored
+        distanceField: 'distance',
+        // to convert the distance calculated to kms or miles instead of meters
+        distanceMultiplier: multiplier,
+      },
+    },
+    {
+      $project: {
+        distance: 1,
+        name: 1,
+      },
+    },
+  ]);
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      data: distances,
     },
   });
 });

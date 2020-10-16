@@ -216,13 +216,18 @@ tourSchema.pre(/^find/, function (next) {
 
 // ?? AGGREGATION MIDDLEWARE
 
-//this will point at the current aggregation object
+// for demonstration purposes; removed later to allow geospatial aggregation without too much workaround
+// geoNear must always be the first stage in the pipeline. We could do a lot of work to reorder this, but instead we are just removing this
+/*
 tourSchema.pre('aggregate', function (next) {
   //adding a state to the pipeline. we could have done this in the aggregate pipelines themselves, but that's not DRY. this way it applies to every aggregation process, which is what we want for this use case
   this.pipeline().unshift({ $match: { secretTour: { $ne: true } } });
-  // console.log(this.pipeline()); //you can see the pipeline that you created in the controller
+
+  //you can see the pipeline that you created in the controller
+  console.log(this.pipeline());
   next();
 });
+*/
 
 //this is the "model" that we create out of the Schema
 const Tour = mongoose.model('Tour', tourSchema);
