@@ -92,6 +92,10 @@ reviewSchema.statics.calcAverageRatings = async function (tourId) {
   }
 };
 
+// * preventing duplicate reviews
+// the combination of tour document and user document have to be unique
+reviewSchema.index({ tour: 1, user: 1 }, { unique: true });
+
 // * middleware to calculate the average rating
 // needs to be a post method because we need to have access to all the reviews (after saving the new one)
 // remember, post doesn't get access to next()
